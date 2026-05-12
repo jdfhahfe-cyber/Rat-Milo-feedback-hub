@@ -1,33 +1,25 @@
-<?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Fetch the response from reCAPTCHA widget
-    $recaptchaResponse = $_POST['g-recaptcha-response'];
-    $secretKey = '6LdtiuYsAAAAALH9DGpc3wphdXPgS7JRosd0KSxQ'; // Replace with your secret key
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rat-Milo Feedback Hub</title>
 
-    // Send a request to Google's reCAPTCHA verification server
-    $url = "https://www.google.com/recaptcha/api/siteverify";
-    $data = [
-        'secret' => $secretKey,
-        'response' => $recaptchaResponse,
-    ];
+    <!-- Load Google reCAPTCHA API -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <h1>Rat-Milo Feedback Hub</h1>
 
-    $options = [
-        'http' => [
-            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-            'method'  => 'POST',
-            'content' => http_build_query($data),
-        ],
-    ];
+    <!-- Feedback Form -->
+    <form action="verify_feedback.php" method="POST">
+        <label for="feedback">Your Feedback:</label>
+        <textarea name="feedback" id="feedback" rows="5" cols="50" placeholder="Enter your feedback here..." required></textarea>
+        
+        <!-- Google reCAPTCHA Widget -->
+        <div class="g-recaptcha" data-sitekey="6LdtiuYsAAAAAGN1RrM7uAyF_66uQFkcAmKgo6A1"></div>
 
-    $context  = stream_context_create($options);
-    $response = file_get_contents($url, false, $context);
-    $result = json_decode($response, true);
-
-    // Check if reCAPTCHA was successful
-    if ($result['success']) {
-        echo "Thank you for your feedback!";
-    } else {
-        echo "reCAPTCHA verification failed. Please try again.";
-    }
-}
-?>
+        <button type="submit">Submit Feedback</button>
+    </form>
+</body>
+</html>
