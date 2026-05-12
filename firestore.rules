@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Hardcoded admin email from user context
+      return isSignedIn() && 
+             request.auth.token.email == 'jdfhahfe@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 2. Validation Blueprint for Review
+    function isValidReview(data) {
+      return data.keys().hasAll(['classification', 'visitorName', 'visitDate', 'rating', 'type', 'details', 'timestamp', 'status']) &&
+             data.keys().size() >= 8 &&
+             data.classification in ['Good', 'Bad'] &&
+             data.visitorName is string && data.visitorName.size() <= 100 &&
+             data.visitDate is string && data.visitDate.size() <= 20 &&
+             data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+             data.type is string && data.type.size() <= 100 &&
+             data.details is string && data.details.size() <= 2000 &&
+             data.status in ['pending', 'replied'] &&
+             data.timestamp == request.time;
+    }
+
+    match /reviews/{reviewId} {
+      // Allows anyone to submit a review (anonymously or signed in)
+      // Note: User code uses anonymous submission.
+      allow create: if isValidReview(incoming());
+
+      // Only admins can read, list, update or delete reviews
+      allow get, list, delete: if isAdmin();
+
+      allow update: if isAdmin() && isValidReview(incoming()) && (
+        // Action: Reply
+        (incoming().diff(existing()).affectedKeys().hasOnly(['adminReply', 'status', 'repliedAt']) &&
+         incoming().adminReply is string && incoming().adminReply.size() <= 2000 &&
+         incoming().status == 'replied' &&
+         incoming().repliedAt == request.time)
+      );
+    }
+    
+    // Connection test document
+    match /test/connection {
+      allow get: if true;
+    }
+  }
+}

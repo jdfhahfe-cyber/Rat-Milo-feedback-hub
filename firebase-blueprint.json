@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "Review": {
+      "title": "Customer Review",
+      "description": "A review submitted by a customer.",
+      "type": "object",
+      "properties": {
+        "classification": { "type": "string", "enum": ["Good", "Bad"] },
+        "visitorName": { "type": "string", "description": "Name of the customer." },
+        "visitDate": { "type": "string", "format": "date" },
+        "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "type": { "type": "string", "description": "Specific category of feedback (e.g. Food Quality)." },
+        "details": { "type": "string", "description": "Detailed comments." },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "replied"] },
+        "adminReply": { "type": "string" },
+        "repliedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["classification", "visitorName", "visitDate", "rating", "type", "details", "timestamp", "status"]
+    }
+  },
+  "firestore": {
+    "reviews": {
+      "schema": "Review",
+      "description": "Collection of customer reviews."
+    }
+  }
+}
